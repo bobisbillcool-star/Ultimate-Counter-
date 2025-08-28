@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ultimate counting game! Count to any number up to 999 trillion. Adjustable speed, progress tracking, and admin controls. Perfect for number challenges and math games.">
+    <meta name="keywords" content="counter game, counting game, number counter, math game, counting challenge, number game, interactive counter">
+    <title>Ultimate Counter Game - Count to Any Number</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(238, 90, 36, 0.6);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        input[type="number"] {
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            width: 120px;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        label {
+            font-weight: bold;
+        }
+        .current-number {
+            text-align: center;
+            font-size: 5em;
+            font-weight: bold;
+            margin: 30px 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, #ffeaa7, #fdcb6e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00b894, #00cec9);
+            border-radius: 10px;
+            transition: width 0.1s ease;
+            box-shadow: 0 0 10px rgba(0, 206, 201, 0.5);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffeaa7;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        .number-item {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .number-item.current {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .admin-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff6b6b;
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            z-index: 1000;
+            display: none;
+            max-width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .admin-panel h3 {
+            color: #ff6b6b;
+            margin-top: 0;
+            text-align: center;
+        }
+        .admin-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+            transition: all 0.3s ease;
+        }
+        .admin-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6);
+        }
+        .admin-control {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .admin-control button {
+            padding: 8px 12px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        .admin-control input {
+            width: 80px;
+            padding: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Admin Button -->
+        <button class="admin-button" onclick="toggleAdminPanel()" title="Admin Controls">⚙️</button>
+        
+        <!-- Admin Panel -->
+        <div class="admin-panel" id="adminPanel">
+            <h3>🔧 ADMIN CONTROLS</h3>
+            
+            <div class="admin-control">
+                <label>Jump to Number:</label>
+                <input type="number" id="jumpToNumber" value="1" min="1">
+                <button onclick="adminJumpTo()">GO</button>
+            </div>
+            
+            <div class="admin-control">
+                <label>Add to Counter:</label>
+                <input type="number" id="addAmount" value="1000" min="1">
+                <button onclick="adminAdd()">ADD</button>
+            </div>
+            
+            <div class="admin-control">
+                <label>Multiply by:</label>
+                <input type="number" id="multiplyAmount" value="2" min="1">
+                <button onclick="adminMultiply()">×</button>
+            </div>
+            
+            <div class="admin-control">
+                <label>Auto-Speed:</label>
+                <button onclick="adminSpeed(100)">FAST</button>
+                <button onclick="adminSpeed(500)">ULTRA</button>
+                <button onclick="adminSpeed(1000)">INSANE</button>
+            </div>
+            
+            <div class="admin-control">
+                <label>Quick Targets:</label>
+                <button onclick="adminSetTarget(1000000)">1M</button>
+                <button onclick="adminSetTarget(10000000)">10M</button>
+                <button onclick="adminSetTarget(100000000)">100M</button>
+            </div>
+            
+            <div class="admin-control">
+                <label>Chaos Mode:</label>
+                <button onclick="adminChaos()">RANDOM</button>
+                <button onclick="adminBackwards()">REVERSE</button>
+                <button onclick="adminResetAll()">NUKE</button>
+            </div>
+            
+            <div class="admin-control">
+                <label>Instant Win:</label>
+                <button onclick="adminInstantWin()" style="background: gold; color: black;">🏆 WIN</button>
+            </div>
+        </div>
+
+        <h1>🎮 Ultimate Counter Game</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Count to:</label>
+                <input type="number" id="targetNumber" value="10000" min="1" max="999999999999999">
+                <button onclick="updateTarget()">Set Target</button>
+            </div>
+            <div class="control-group">
+                <label>Speed:</label>
+                <input type="range" id="speedSlider" min="1" max="1000" value="20">
+                <span id="speedDisplay">20/sec</span>
+                <button onclick="updateSpeed()">Apply Speed</button>
+            </div>
+            <div class="control-group">
+                <button onclick="startCounting()">Start Counting</button>
+                <button onclick="pauseCounting()">Pause</button>
+                <button onclick="resetCounter()">Reset</button>
+                <button onclick="jumpToEnd()" id="jumpButton">Jump to End</button>
+            </div>
+        </div>
+
+        <div class="current-number" id="currentNumber">1</div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0.01%"></div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="currentCount">1</div>
+                <div class="stat-label">Current Number</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="progressPercent">0.01%</div>
+                <div class="stat-label">Progress</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="remaining">9999</div>
+                <div class="stat-label">Remaining</div>
+            </div>
+        </div>
+
+        <div class="number-grid" id="numberGrid"></div>
+    </div>
+
+    <script>
+        // Initialize all variables
+        let currentNum = 1;
+        let isCountingActive = false;
+        let countingInterval = null;
+        let maxNum = 10000;
+        let countingSpeed = 20;
+        let userIsScrolling = false;
+        let scrollTimeout = null;
+        let isReverseCounting = false;
+
+        // Admin Functions
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function adminJumpTo() {
+            const jumpNum = parseInt(document.getElementById('jumpToNumber').value);
+            if (jumpNum && jumpNum >= 1 && jumpNum <= maxNum) {
+                pauseCounting();
+                currentNum = jumpNum;
+                updateDisplay();
+                alert(`🎯 Jumped to ${jumpNum.toLocaleString()}!`);
+            } else {
+                alert('❌ Invalid number!');
+            }
+        }
+
+        function adminAdd() {
+            const addNum = parseInt(document.getElementById('addAmount').value);
+            if (addNum && addNum > 0) {
+                pauseCounting();
+                currentNum = Math.min(currentNum + addNum, maxNum);
+                updateDisplay();
+                alert(`➕ Added ${addNum.toLocaleString()}!`);
+            }
+        }
+
+        function adminMultiply() {
+            const multiNum = parseInt(document.getElementById('multiplyAmount').value);
+            if (multiNum && multiNum > 0) {
+                pauseCounting();
+                currentNum = Math.min(currentNum * multiNum, maxNum);
+                updateDisplay();
+                alert(`✖️ Multiplied by ${multiNum}!`);
+            }
+        }
+
+        function adminSpeed(speed) {
+            countingSpeed = speed;
+            document.getElementById('speedSlider').value = speed;
+            document.getElementById('speedDisplay').textContent = `${speed}/sec`;
+            if (isCountingActive) {
+                pauseCounting();
+                startCounting();
+            }
+            alert(`⚡ Speed set to ${speed}/sec!`);
+        }
+
+        function adminSetTarget(target) {
+            pauseCounting();
+            maxNum = target;
+            document.getElementById('targetNumber').value = target;
+            document.getElementById('jumpButton').textContent = `Jump to ${target.toLocaleString()}`;
+            updateDisplay();
+            alert(`🎯 Target set to ${target.toLocaleString()}!`);
+        }
+
+        function adminChaos() {
+            pauseCounting();
+            currentNum = Math.floor(Math.random() * maxNum) + 1;
+            countingSpeed = Math.floor(Math.random() * 1000) + 1;
+            document.getElementById('speedSlider').value = countingSpeed;
+            document.getElementById('speedDisplay').textContent = `${countingSpeed}/sec`;
+            updateDisplay();
+            startCounting();
+            alert(`🎲 CHAOS MODE: Random number ${currentNum.toLocaleString()} at ${countingSpeed}/sec!`);
+        }
+
+        function adminBackwards() {
+            isReverseCounting = !isReverseCounting;
+            if (isCountingActive) {
+                pauseCounting();
+                startCounting();
+            }
+            alert(`🔄 Reverse mode: ${isReverseCounting ? 'ON' : 'OFF'}!`);
+        }
+
+        function adminResetAll() {
+            if (confirm('🚨 Are you sure? This will reset EVERYTHING!')) {
+                pauseCounting();
+                currentNum = 1;
+                maxNum = 10000;
+                countingSpeed = 20;
+                isReverseCounting = false;
+                document.getElementById('targetNumber').value = 10000;
+                document.getElementById('speedSlider').value = 20;
+                document.getElementById('speedDisplay').textContent = '20/sec';
+                document.getElementById('jumpButton').textContent = 'Jump to End';
+                updateDisplay();
+                alert('💥 EVERYTHING RESET!');
+            }
+        }
+
+        function adminInstantWin() {
+            pauseCounting();
+            currentNum = maxNum;
+            updateDisplay();
+            setTimeout(() => {
+                alert('🎉🏆 ADMIN WIN! You reached the target instantly! 🏆🎉');
+            }, 100);
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentNumber').textContent = currentNum;
+            document.getElementById('currentCount').textContent = currentNum;
+            
+            const progress = (currentNum / maxNum) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressPercent').textContent = progress.toFixed(2) + '%';
+            document.getElementById('remaining').textContent = maxNum - currentNum;
+
+            updateNumberGrid();
+        }
+
+        function updateNumberGrid() {
+            const grid = document.getElementById('numberGrid');
+            
+            // Show numbers around current number (±50)
+            const start = Math.max(1, currentNum - 50);
+            const end = Math.min(maxNum, currentNum + 50);
+            
+            grid.innerHTML = '';
+            
+            for (let i = start; i <= end; i++) {
+                const item = document.createElement('div');
+                item.className = 'number-item';
+                if (i === currentNum) {
+                    item.className += ' current';
+                }
+                item.textContent = i;
+                grid.appendChild(item);
+            }
+
+            // Only auto-scroll if user isn't manually scrolling
+            if (!userIsScrolling) {
+                const currentItem = grid.querySelector('.current');
+                if (currentItem) {
+                    const gridRect = grid.getBoundingClientRect();
+                    const itemRect = currentItem.getBoundingClientRect();
+                    
+                    // Only scroll if the current item is not visible in the grid
+                    if (itemRect.top < gridRect.top || itemRect.bottom > gridRect.bottom) {
+                        currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        }
+
+        function updateSpeed() {
+            const slider = document.getElementById('speedSlider');
+            countingSpeed = parseInt(slider.value);
+            document.getElementById('speedDisplay').textContent = `${countingSpeed}/sec`;
+            
+            // Restart counting with new speed if currently active
+            if (isCountingActive) {
+                pauseCounting();
+                startCounting();
+            }
+        }
+
+        function updateTarget() {
+            const input = document.getElementById('targetNumber');
+            const newTarget = parseInt(input.value);
+            
+            if (newTarget && newTarget > 0 && newTarget <= 999999999999999) {
+                pauseCounting();
+                maxNum = newTarget;
+                if (currentNum > maxNum) {
+                    currentNum = maxNum;
+                }
+                updateDisplay();
+                document.getElementById('jumpButton').textContent = `Jump to ${maxNum.toLocaleString()}`;
+                alert(`✅ Target updated to ${maxNum.toLocaleString()}!`);
+            } else {
+                alert('❌ Please enter a valid number between 1 and 999,999,999,999,999');
+                input.value = maxNum;
+            }
+        }
+
+        function startCounting() {
+            if (isCountingActive) return;
+            
+            isCountingActive = true;
+            
+            // Use a more aggressive approach for high speeds
+            if (countingSpeed > 100) {
+                // For very high speeds, count multiple numbers per frame
+                const numbersPerFrame = Math.ceil(countingSpeed / 60); // 60fps target
+                
+                function fastCount() {
+                    if (!isCountingActive) return;
+                    
+                    // Count multiple numbers at once for high speeds
+                    for (let i = 0; i < numbersPerFrame && isCountingActive; i++) {
+                        if (isReverseCounting) {
+                            currentNum = Math.max(1, currentNum - 1);
+                            if (currentNum <= 1) break;
+                        } else {
+                            currentNum++;
+                            if (currentNum >= maxNum) break;
+                        }
+                    }
+                    
+                    updateDisplay();
+                    
+                    if (currentNum >= maxNum) {
+                        pauseCounting();
+                        alert(`🎉 Counting complete! Reached ${maxNum.toLocaleString()}!`);
+                        return;
+                    }
+                    
+                    if (isCountingActive) {
+                        requestAnimationFrame(fastCount);
+                    }
+                }
+                requestAnimationFrame(fastCount);
+                
+            } else if (countingSpeed > 30) {
+                // Medium speeds - use requestAnimationFrame with timing
+                let lastTime = 0;
+                const interval = 1000 / countingSpeed;
+                
+                function mediumCount(timestamp) {
+                    if (!isCountingActive) return;
+                    
+                    if (timestamp - lastTime >= interval) {
+                        if (isReverseCounting) {
+                            if (currentNum <= 1) {
+                                pauseCounting();
+                                alert(`🎉 Reverse counting complete! Reached 1!`);
+                                return;
+                            }
+                            currentNum--;
+                        } else {
+                            if (currentNum >= maxNum) {
+                                pauseCounting();
+                                alert(`🎉 Counting complete! Reached ${maxNum.toLocaleString()}!`);
+                                return;
+                            }
+                            currentNum++;
+                        }
+                        updateDisplay();
+                        lastTime = timestamp;
+                    }
+                    
+                    if (isCountingActive) {
+                        requestAnimationFrame(mediumCount);
+                    }
+                }
+                requestAnimationFrame(mediumCount);
+                
+            } else {
+                // Low speeds - use setInterval (most reliable for slow counting)
+                countingInterval = setInterval(() => {
+                    if (isReverseCounting) {
+                        if (currentNum <= 1) {
+                            pauseCounting();
+                            alert(`🎉 Reverse counting complete! Reached 1!`);
+                            return;
+                        }
+                        currentNum--;
+                    } else {
+                        if (currentNum >= maxNum) {
+                            pauseCounting();
+                            alert(`🎉 Counting complete! Reached ${maxNum.toLocaleString()}!`);
+                            return;
+                        }
+                        currentNum++;
+                    }
+                    updateDisplay();
+                }, 1000 / countingSpeed);
+            }
+        }
+
+        function pauseCounting() {
+            isCountingActive = false;
+            if (countingInterval) {
+                clearInterval(countingInterval);
+                countingInterval = null;
+            }
+        }
+
+        function resetCounter() {
+            pauseCounting();
+            currentNum = 1;
+            updateDisplay();
+        }
+
+        function jumpToEnd() {
+            pauseCounting();
+            currentNum = maxNum;
+            updateDisplay();
+            alert(`🎯 Jumped to ${maxNum.toLocaleString()}!`);
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize admin panel as hidden
+            document.getElementById('adminPanel').style.display = 'none';
+            
+            // Set up speed slider listener
+            const speedSlider = document.getElementById('speedSlider');
+            speedSlider.addEventListener('input', function() {
+                document.getElementById('speedDisplay').textContent = `${this.value}/sec`;
+            });
+
+            // Set up scroll detection
+            const grid = document.getElementById('numberGrid');
+            
+            grid.addEventListener('scroll', function() {
+                userIsScrolling = true;
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    userIsScrolling = false;
+                }, 5000);
+            });
+            
+            grid.addEventListener('wheel', function(e) {
+                userIsScrolling = true;
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    userIsScrolling = false;
+                }, 5000);
+            });
+            
+            grid.addEventListener('touchstart', function() {
+                userIsScrolling = true;
+            });
+            
+            grid.addEventListener('touchend', function() {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    userIsScrolling = false;
+                }, 5000);
+            });
+
+            // Initialize display
+            updateDisplay();
+            
+            // Auto-start counting after 2 seconds
+            setTimeout(() => {
+                startCounting();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
